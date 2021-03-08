@@ -38,7 +38,7 @@ app.get('/workouts',(_req, res, next) => {
             return;
         }
 
-        res.json(rows.map(serializeWorkout));
+        res.json(rows.map(helpers.serializeWorkout));
     });
 });
 
