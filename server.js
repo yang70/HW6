@@ -43,26 +43,40 @@ app.get('/workouts',(_req, res, next) => {
 });
 
 // Create workout
-app.post('/workouts/new',(req, res, next) => {
-    mysql.pool.query(
-        "INSERT INTO workouts (name, reps, weight, date, lbs) VALUES (?, ?, ?, ?, ?)",
-        [
-            req.body.name,
-            req.body.reps,
-            req.body.weight,
-            req.body.date,
-            req.body.lbs
-        ],
-        (err, result) => {
-            if(err){
-                next(err);
-                return;
-            }
-
-            res.json(result);
+app.post(
+    '/workouts/new',
+    body('name').exists(),
+    body('reps').exists(),
+    body('weight').exists(),
+    body('date').exists(),
+    body('lbs').exists(),
+    (req, res, next) => {
+        // Validation
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ errors: errors.array() });
         }
-    );
-});
+
+        mysql.pool.query(
+            "INSERT INTO workouts (name, reps, weight, date, lbs) VALUES (?, ?, ?, ?, ?)",
+            [
+                req.body.name,
+                req.body.reps,
+                req.body.weight,
+                req.body.date,
+                req.body.lbs
+            ],
+            (err, result) => {
+                if(err){
+                    next(err);
+                    return;
+                }
+
+                res.json(result);
+            }
+        );
+    }
+);
 
 // Edit workout
 app.put('/workouts/:id',function(req,res,next){
