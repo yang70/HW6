@@ -1,5 +1,5 @@
 // Workout serializer
-export default function serializeWorkout(workout) {
+exports.serializeWorkout =  workout => {
     workout.lbs = !!workout.lbs;
     return workout;
-}
+};

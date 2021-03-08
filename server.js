@@ -6,8 +6,8 @@ const handlebars = require('express-handlebars').create({defaultLayout:'main'});
 const bodyParser = require('body-parser');
 const { body, validationResult } = require('express-validator');
 
-import pool from './helpers/dbcon.js';
-import serializeWorkout from './helpers.serializer.js'
+const mysql = require('./helpers/dbcon.js');
+const helpers = require('./helpers.serializer.js)'
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -32,7 +32,7 @@ app.get('/', (_req, res, _next) => {
 
 // All workouts
 app.get('/workouts',(_req, res, next) => {
-    pool.query('SELECT * FROM workouts', (err, rows, _fields) => {
+    mysql.pool.query('SELECT * FROM workouts', (err, rows, _fields) => {
         if(err){
             next(err);
             return;
@@ -44,7 +44,7 @@ app.get('/workouts',(_req, res, next) => {
 
 // Create workout
 app.post('/workouts/new',(req, res, next) => {
-    pool.query(
+    mysql.pool.query(
         "INSERT INTO workouts (name, reps, weight, date, lbs) VALUES (?, ?, ?, ?, ?)",
         [
             req.body.name,
@@ -66,7 +66,7 @@ app.post('/workouts/new',(req, res, next) => {
 
 // Edit workout
 app.put('/workouts/:id',function(req,res,next){
-    pool.query("UPDATE todo SET name=?, done=?, due=? WHERE id=? ",
+    mysql.pool.query("UPDATE todo SET name=?, done=?, due=? WHERE id=? ",
         [
             req.query.name,
             req.query.done,
@@ -87,7 +87,7 @@ app.put('/workouts/:id',function(req,res,next){
 
 // Delete workout
 app.delete('/workouts/:id',function(req,res,next){
-    pool.query("DELETE FROM todo WHERE id=?", [req.query.id], function(err, result){
+    mysql.pool.query("DELETE FROM todo WHERE id=?", [req.query.id], function(err, result){
         if(err){
             next(err);
             return;
@@ -100,7 +100,7 @@ app.delete('/workouts/:id',function(req,res,next){
 
 // Create/reset the 'workouts' table
 app.get('/reset-table',function(_req,res,_next){
-    pool.query("DROP TABLE IF EXISTS workouts", function(_err){
+    mysql.pool.query("DROP TABLE IF EXISTS workouts", function(_err){
         var createString = "CREATE TABLE workouts("+
             "id INT PRIMARY KEY AUTO_INCREMENT,"+
             "name VARCHAR(255) NOT NULL,"+
@@ -109,7 +109,7 @@ app.get('/reset-table',function(_req,res,_next){
             "date DATE,"+
             "lbs BOOLEAN)";
 
-        pool.query(createString, function(_err){
+        mysql.pool.query(createString, function(_err){
             res.json({results: "Table (re)created."});
         })
     });

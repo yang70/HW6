@@ -8,4 +8,4 @@ const pool = mysql.createPool({
   database        : 'cs290_yangmat'
 });
 
-export default pool;
+exports.pool;
