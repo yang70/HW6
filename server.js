@@ -7,7 +7,7 @@ const bodyParser = require('body-parser');
 const { body, validationResult } = require('express-validator');
 
 const mysql = require('./helpers/dbcon.js');
-const helpers = require('./helpers.serializer.js');
+const helpers = require('./helpers/helpers.js');
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
