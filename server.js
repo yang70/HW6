@@ -4,6 +4,8 @@ const app = express();
 
 const handlebars = require('express-handlebars').create({defaultLayout:'main'});
 const bodyParser = require('body-parser');
+
+// https://express-validator.github.io/docs/index.html
 const { body, validationResult } = require('express-validator');
 
 const mysql = require('./helpers/dbcon.js');
@@ -51,7 +53,7 @@ app.post(
     body('date').exists(),
     body('lbs').exists(),
     (req, res, next) => {
-        // Validation
+        // Parameter validation
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return res.status(400).json({ errors: errors.array() });
@@ -78,37 +80,54 @@ app.post(
     }
 );
 
-// Edit workout
-app.put('/workouts/:id',function(req,res,next){
-    mysql.pool.query("UPDATE todo SET name=?, done=?, due=? WHERE id=? ",
-        [
-            req.query.name,
-            req.query.done,
-            req.query.due,
-            req.query.id
-        ],
-        function(err, result){
-            if(err){
+// Update workout
+app.put(
+    '/workouts/:id',
+    (req,res,next) => {
+        const id = req.params.id;
+
+        mysql.pool.query("SELECT * FROM workouts WHERE id=?", [id], (err, result) => {
+            if(err) {
                 next(err);
                 return;
             }
 
-            context.results = "Updated " + result.changedRows + " rows.";
-            res.render('home',context);
-        }
-    );
-});
+            if(result.length == 1) {
+                let workout = results[0];
+
+                mysql.pool.query(
+                    "UPDATE workouts SET name=?, reps=?, weight=?, date=?, lbs=? WHERE id=? ",
+                    [
+                        req.body.name || workout.name,
+                        req.body.reps || workout.reps,
+                        req.body.weight || workout.weight,
+                        req.body.date || workout.date,
+                        req.body.lbs || workout.lbs,
+                        id
+                    ],
+                    (err, result) => {
+                        if(err){
+                            next(err);
+                            return;
+                        }
+
+                        res.json(result);
+                    }
+                );
+            }
+        });
+    }
+);
 
 // Delete workout
 app.delete('/workouts/:id',function(req,res,next){
-    mysql.pool.query("DELETE FROM todo WHERE id=?", [req.query.id], function(err, result){
+    mysql.pool.query("DELETE FROM workouts WHERE id=?", [req.params.id], (err, result) => {
         if(err){
             next(err);
             return;
         }
 
-        context.results = "Deleted " + result.changedRows + " rows.";
-        res.render('home',context);
+        res.json(result);
     });
 });
 
