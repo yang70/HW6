@@ -49,10 +49,16 @@ app.post(
     '/workouts/new',
     body('name').exists(),
     body('name').isLength({ max: 255 }),
-    body('reps').isInt(),
-    body('weight').isInt(),
-    body('date').isDate(),
-    body('lbs').isBoolean(),
+    oneOf([
+        body('reps').isInt(),
+        body('reps').custom(val => {
+            if(val) return Promise.reject('Must be integer');
+        })
+    ]),
+    // body('reps').isInt(),
+    // body('weight').isInt(),
+    // body('date').isDate(),
+    // body('lbs').isBoolean(),
     (req, res, next) => {
         // Parameter validation
         const errors = validationResult(req);
