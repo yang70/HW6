@@ -48,7 +48,7 @@ app.get('/workouts',(_req, res, next) => {
 app.post(
     '/workouts/new',
     body('name').exists(),
-    body('name').isAlphanumeric(),
+    body('name').isLength({ max: 255 }),
     body('reps').isInt(),
     body('weight').isInt(),
     body('date').isDate(),
@@ -84,7 +84,7 @@ app.post(
 // Update workout
 app.put(
     '/workouts/:id',
-    body('name').isAlphanumeric(),
+    body('name').isLength({ max: 255 }),
     body('reps').isInt(),
     body('weight').isInt(),
     body('date').isDate(),
