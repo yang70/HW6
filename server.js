@@ -47,18 +47,11 @@ app.get('/workouts',(_req, res, next) => {
 // Create workout
 app.post(
     '/workouts/new',
-    body('name').exists(),
-    body('name').isLength({ max: 255 }),
-    oneOf([
-        body('reps').isInt(),
-        body('reps').custom(val => {
-            if(val) return Promise.reject('Must be integer');
-        })
-    ]),
-    // body('reps').isInt(),
-    // body('weight').isInt(),
-    // body('date').isDate(),
-    // body('lbs').isBoolean(),
+    body('name').isLength({ min: 1, max: 255 }),
+    body('reps').isInt(),
+    body('weight').isInt(),
+    body('date').isDate(),
+    body('lbs').isBoolean(),
     (req, res, next) => {
         // Parameter validation
         const errors = validationResult(req);
@@ -90,12 +83,18 @@ app.post(
 // Update workout
 app.put(
     '/workouts/:id',
-    body('name').isLength({ max: 255 }),
+    body('name').isLength({ min: 1, max: 255 }),
     body('reps').isInt(),
     body('weight').isInt(),
     body('date').isDate(),
     body('lbs').isBoolean(),
     (req,res,next) => {
+        // Parameter validation
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ errors: errors.array() });
+        }
+
         const id = req.params.id;
 
         mysql.pool.query("SELECT * FROM workouts WHERE id=?", [id], (err, result) => {
