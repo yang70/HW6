@@ -93,7 +93,7 @@ app.put(
             }
 
             if(result.length == 1) {
-                let workout = results[0];
+                let workout = result[0];
 
                 mysql.pool.query(
                     "UPDATE workouts SET name=?, reps=?, weight=?, date=?, lbs=? WHERE id=? ",
@@ -105,13 +105,13 @@ app.put(
                         req.body.lbs || workout.lbs,
                         id
                     ],
-                    (err, result) => {
+                    (err, results) => {
                         if(err){
                             next(err);
                             return;
                         }
 
-                        res.json(result);
+                        res.json(results);
                     }
                 );
             }
