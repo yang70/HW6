@@ -48,10 +48,11 @@ app.get('/workouts',(_req, res, next) => {
 app.post(
     '/workouts/new',
     body('name').exists(),
-    body('reps').exists(),
-    body('weight').exists(),
-    body('date').exists(),
-    body('lbs').exists(),
+    body('name').isAlphanumeric(),
+    body('reps').isInt(),
+    body('weight').isInt(),
+    body('date').isDate(),
+    body('lbs').isBoolean(),
     (req, res, next) => {
         // Parameter validation
         const errors = validationResult(req);
@@ -83,6 +84,11 @@ app.post(
 // Update workout
 app.put(
     '/workouts/:id',
+    body('name').isAlphanumeric(),
+    body('reps').isInt(),
+    body('weight').isInt(),
+    body('date').isDate(),
+    body('lbs').isBoolean(),
     (req,res,next) => {
         const id = req.params.id;
 
