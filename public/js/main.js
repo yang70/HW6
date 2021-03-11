@@ -9,20 +9,19 @@ document.addEventListener('DOMContentLoaded', (_event) => {
 function createTable() {
     fetchWorkouts().then(res => {
         res.forEach(workout => {
-            addWorkoutRow(workout);
+            addNewWorkoutRow(workout);
         });
     }).catch(err => {
         console.error(err)
     });
 }
 
-function addWorkoutRow(workout) {
+function addNewWorkoutRow(workout) {
     let newRow = document.createElement("tr");
 
     newRow.id = workout.id;
 
-    addWorkoutRowData(newRow, workout);
-    addWorkoutRowButtons(newRow);
+    addWorkoutRow(newRow, workout);
 
     elById('tbody').appendChild(newRow);
 }
@@ -36,11 +35,93 @@ function deleteWorkoutRow(workoutId) {
 }
 
 function editWorkoutRow(workoutId) {
-    let row = elById(workoutId);
-    let workout = workoutFromRow(row);
-    let editForm = createEditForm(workout, workoutId);
+    const row     = elById(workoutId);
+    const workout = workoutFromRow(row);
+    let input;
 
-    debugger;
+    clearRow(row);
+
+    COLUMNS.forEach(val => {
+        let td = document.createElement("td");
+
+        if(val === "lbs") {
+            input = document.createElement("select");
+
+            let lbsOption       = document.createElement("option");
+            lbsOption.value     = true;
+            lbsOption.innerText = "lbs";
+            input.appendChild(lbsOption);
+
+            let kgOption       = document.createElement("option");
+            kgOption.value     = false;
+            kgOption.innerText = "kg";
+            input.appendChild(kgOption);
+        }
+        else {
+            input = document.createElement("input");
+
+            switch(val) {
+                case "reps":
+                case "weight":
+                    input.type = "number";
+                    break;
+                case "date":
+                    input.type = "date";
+                    break;
+                case "name":
+                    input.type = "text";
+            }
+        }
+
+        input.id    = `${val}${workoutId}`;
+        input.value = workout[val];
+        td.appendChild(input);
+        row.appendChild(td);
+    });
+
+    const submitCol = document.createElement("td");
+    const submitBtn = document.createElement("button");
+    submitBtn.innerText = "SUBMIT";
+    submitBtn.addEventListener("click", (_event) => {
+        submitEdit(row);
+    });
+    submitCol.appendChild(submitBtn);
+    row.appendChild(submitCol);
+
+    const cancelCol = document.createElement("td");
+    const cancelBtn = document.createElement("button");
+    cancelBtn.innerText = "CANCEL";
+    cancelBtn.addEventListener("click", (_event) => {
+        workout.id = row.id;
+        addWorkoutRow(row, workout);
+    });
+    cancelCol.appendChild(cancelBtn);
+    row.appendChild(cancelCol);
+}
+
+function submitEdit(row) {
+    workout = {};
+    COLUMNS.forEach(val => {
+        let input = document.getElementById(`${val}${row.id}`);
+        switch(val) {
+            case "reps":
+            case "weight":
+                workout[val] = parseInt(input.value);
+                break;
+            case "lbs":
+                workout.lbs = input.value === "true";
+                break;
+            default:
+                workout[val] = input.value;
+        }
+    });
+    workout.id = row.id;
+
+    editWorkout(workout).then(_res => {
+        addWorkoutRow(row, workout);
+    }).catch(err => {
+        console.error(err);
+    });
 }
 
 function addWorkoutRowData(row, workout) {
@@ -82,6 +163,12 @@ function addWorkoutRowButtons(row) {
     row.appendChild(btnCol);
 }
 
+function addWorkoutRow(row, workout) {
+    clearRow(row);
+    addWorkoutRowData(row, workout);
+    addWorkoutRowButtons(row);
+}
+
 function workoutFromRow(row) {
     const workout = {};
 
@@ -103,16 +190,16 @@ function workoutFromRow(row) {
     return workout;
 }
 
-function createEditForm(workout, workoutId) {
-    const form = document.createElement("form");
-}
-
 /////////////
 // HELPERS //
 /////////////
 
 function elById(id) {
     return document.getElementById(id);
+}
+
+function clearRow(row) {
+    row.innerText = "";
 }
 
 ///////////////////
@@ -135,6 +222,46 @@ function fetchWorkouts() {
         });
 
         req.send(null);
+    });
+}
+
+function createWorkout(workout) {
+    const req = new XMLHttpRequest();
+
+    return new Promise((resolve, reject) => {
+        let url = API_URL + `/workouts/new`;
+        req.open('POST', url, true);
+        req.setRequestHeader('Content-Type', 'application/json');
+        req.addEventListener('load', () => {
+            if(req.status >= 200 && req.status < 400) {
+                resolve(JSON.parse(req.response));
+            }
+            else {
+                reject(JSON.parse(req.response));
+            }
+        });
+
+        req.send(JSON.stringify(workout));
+    });
+}
+
+function editWorkout(workout) {
+    const req = new XMLHttpRequest();
+
+    return new Promise((resolve, reject) => {
+        let url = API_URL + `/workouts/${workout.id}`;
+        req.open('PUT', url, true);
+        req.setRequestHeader('Content-Type', 'application/json');
+        req.addEventListener('load', () => {
+            if(req.status >= 200 && req.status < 400) {
+                resolve(JSON.parse(req.response));
+            }
+            else {
+                reject(JSON.parse(req.response));
+            }
+        });
+
+        req.send(JSON.stringify(workout));
     });
 }
 
