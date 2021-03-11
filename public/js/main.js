@@ -1,12 +1,21 @@
 COLUMNS = ["name", "reps", "weight", "lbs", "date"];
 API_URL = 'http://flip2.engr.oregonstate.edu:4861'
 
-// Create the workouts table on page load
+///////////////////////
+// INITIAL PAGE LOAD //
+///////////////////////
+
 document.addEventListener('DOMContentLoaded', (_event) => {
     createTable();
 });
 
 function createTable() {
+    let createRow = document.createElement("tr");
+    createRow.id  = "new";
+    elById("tbody").appendChild(createRow);
+
+    initializeCreateRow()
+
     fetchWorkouts().then(res => {
         res.forEach(workout => {
             addNewWorkoutRow(workout);
@@ -14,6 +23,58 @@ function createTable() {
     }).catch(err => {
         console.error(err)
     });
+}
+
+/////////////////////
+// ACTION HANDLERS //
+/////////////////////
+
+function submitCreateWorkout(row) {
+    workout = workoutFromId(row.id);
+
+    createWorkout(workout).then(res => {
+        workout.id = res.insertId;
+        addNewWorkoutRow(workout);
+        initializeCreateRow();
+    }).catch(err => {
+        console.error(err);
+    });
+}
+
+function submitEditWorkout(row) {
+    const workout = workoutFromId(row.id);
+
+    editWorkout(workout).then(_res => {
+        addWorkoutRow(row, workout);
+    }).catch(err => {
+        console.error(err);
+    });
+}
+
+function submitDeleteWorkout(workoutId) {
+    deleteWorkout(workoutId).then(_res => {
+        document.getElementById(workoutId).remove();
+    }).catch(err => {
+        console.error(err);
+    });
+}
+
+/////////////////
+// ROW HELPERS //
+/////////////////
+
+function initializeCreateRow() {
+    let createRow = elById("new");
+    createRowInputs(createRow, emptyWorkout());
+
+    const submitCol = document.createElement("td");
+    const submitBtn = document.createElement("button");
+    submitBtn.innerText = "CREATE NEW";
+    submitBtn.addEventListener("click", (_event) => {
+        submitCreateWorkout(createRow);
+    });
+    submitCol.appendChild(submitBtn);
+    createRow.appendChild(submitCol);
 }
 
 function addNewWorkoutRow(workout) {
@@ -26,20 +87,9 @@ function addNewWorkoutRow(workout) {
     elById('tbody').appendChild(newRow);
 }
 
-function deleteWorkoutRow(workoutId) {
-    deleteWorkout(workoutId).then(_res => {
-        document.getElementById(workoutId).remove();
-    }).catch(err => {
-        console.error(err);
-    });
-}
-
-function editWorkoutRow(workoutId) {
-    const row     = elById(workoutId);
-    const workout = workoutFromRow(row);
-    let input;
-
+function createRowInputs(row, workout) {
     clearRow(row);
+    let input;
 
     COLUMNS.forEach(val => {
         let td = document.createElement("td");
@@ -73,54 +123,10 @@ function editWorkoutRow(workoutId) {
             }
         }
 
-        input.id    = `${val}${workoutId}`;
+        input.id    = `${val}${row.id}`;
         input.value = workout[val];
         td.appendChild(input);
         row.appendChild(td);
-    });
-
-    const submitCol = document.createElement("td");
-    const submitBtn = document.createElement("button");
-    submitBtn.innerText = "SUBMIT";
-    submitBtn.addEventListener("click", (_event) => {
-        submitEdit(row);
-    });
-    submitCol.appendChild(submitBtn);
-    row.appendChild(submitCol);
-
-    const cancelCol = document.createElement("td");
-    const cancelBtn = document.createElement("button");
-    cancelBtn.innerText = "CANCEL";
-    cancelBtn.addEventListener("click", (_event) => {
-        workout.id = row.id;
-        addWorkoutRow(row, workout);
-    });
-    cancelCol.appendChild(cancelBtn);
-    row.appendChild(cancelCol);
-}
-
-function submitEdit(row) {
-    workout = {};
-    COLUMNS.forEach(val => {
-        let input = document.getElementById(`${val}${row.id}`);
-        switch(val) {
-            case "reps":
-            case "weight":
-                workout[val] = parseInt(input.value);
-                break;
-            case "lbs":
-                workout.lbs = input.value === "true";
-                break;
-            default:
-                workout[val] = input.value;
-        }
-    });
-    workout.id = row.id;
-
-    editWorkout(workout).then(_res => {
-        addWorkoutRow(row, workout);
-    }).catch(err => {
-        console.error(err);
     });
 }
 
@@ -156,7 +162,7 @@ function addWorkoutRowButtons(row) {
     let delBtn = document.createElement("button");
     delBtn.innerText = "DELETE";
     delBtn.addEventListener("click", (_event) => {
-        deleteWorkoutRow(row.id);
+        submitDeleteWorkout(row.id);
     });
 
     btnCol.appendChild(delBtn)
@@ -190,9 +196,35 @@ function workoutFromRow(row) {
     return workout;
 }
 
-/////////////
-// HELPERS //
-/////////////
+function editWorkoutRow(workoutId) {
+    const row     = elById(workoutId);
+    const workout = workoutFromRow(row);
+
+    createRowInputs(row, workout);
+
+    const submitCol = document.createElement("td");
+    const submitBtn = document.createElement("button");
+    submitBtn.innerText = "SUBMIT";
+    submitBtn.addEventListener("click", (_event) => {
+        submitEditWorkout(row);
+    });
+    submitCol.appendChild(submitBtn);
+    row.appendChild(submitCol);
+
+    const cancelCol = document.createElement("td");
+    const cancelBtn = document.createElement("button");
+    cancelBtn.innerText = "CANCEL";
+    cancelBtn.addEventListener("click", (_event) => {
+        workout.id = row.id;
+        addWorkoutRow(row, workout);
+    });
+    cancelCol.appendChild(cancelBtn);
+    row.appendChild(cancelCol);
+}
+
+//////////////////
+// MISC HELPERS //
+//////////////////
 
 function elById(id) {
     return document.getElementById(id);
@@ -200,6 +232,33 @@ function elById(id) {
 
 function clearRow(row) {
     row.innerText = "";
+}
+
+function emptyWorkout() {
+    let workout = {};
+    COLUMNS.forEach(val => workout[val] = null);
+    workout.id = "new";
+    return workout;
+}
+
+function workoutFromId(id) {
+    workout = {};
+    COLUMNS.forEach(val => {
+        let input = document.getElementById(`${val}${id}`);
+        switch(val) {
+            case "reps":
+            case "weight":
+                workout[val] = parseInt(input.value);
+                break;
+            case "lbs":
+                workout.lbs = input.value === "true";
+                break;
+            default:
+                workout[val] = input.value;
+        }
+    });
+    workout.id = id;
+    return workout;
 }
 
 ///////////////////
