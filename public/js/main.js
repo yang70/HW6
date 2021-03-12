@@ -81,11 +81,9 @@ function initializeCreateRow() {
 
 function addNewWorkoutRow(workout) {
     let newRow = document.createElement("tr");
-
-    newRow.id = workout.id;
+    newRow.id  = workout.id;
 
     addWorkoutRow(newRow, workout);
-
     elById('tbody').appendChild(newRow);
 }
 
@@ -206,6 +204,7 @@ function editWorkoutRow(workoutId) {
 
     createRowInputs(row, workout);
 
+    // SAVE button
     const submitCol = document.createElement("td");
     const submitBtn = document.createElement("button");
     submitBtn.innerText = "SAVE";
@@ -215,6 +214,7 @@ function editWorkoutRow(workoutId) {
     submitCol.appendChild(submitBtn);
     row.appendChild(submitCol);
 
+    // CANCEL button
     const cancelCol = document.createElement("td");
     const cancelBtn = document.createElement("button");
     cancelBtn.innerText = "CANCEL";
@@ -235,9 +235,8 @@ function handleError(err) {
     console.error(err);
 
     const errTable = document.getElementById("error-table");
-
-    const hdRow  = document.createElement("tr");
-    const header = document.createElement("th");
+    const hdRow    = document.createElement("tr");
+    const header   = document.createElement("th");
 
     header.innerText = "Error";
 

@@ -20,9 +20,9 @@ app.engine('handlebars', handlebars.engine);
 app.set('view engine', 'handlebars');
 app.set('port', process.env.PORT || 3000);
 
-/////////////////
-// Render page //
-/////////////////
+///////////////////
+// Frontend Page //
+///////////////////
 
 app.get('/', (_req, res, _next) => {
     res.render('home');
@@ -39,7 +39,6 @@ app.get('/workouts',(_req, res, next) => {
             next(err);
             return;
         }
-
         res.json(rows.map(helpers.serializeWorkout));
     });
 });
@@ -73,7 +72,6 @@ app.post(
                     next(err);
                     return;
                 }
-
                 res.json(result);
             }
         );
@@ -121,7 +119,6 @@ app.put(
                             next(err);
                             return;
                         }
-
                         res.json(results);
                     }
                 );
@@ -137,7 +134,6 @@ app.delete('/workouts/:id',function(req,res,next){
             next(err);
             return;
         }
-
         res.json(result);
     });
 });
