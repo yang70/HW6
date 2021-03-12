@@ -162,14 +162,24 @@ app.get('/reset-table',function(_req,res,_next){
 // 400
 app.use(function(_req,res){
     res.status(404);
-    res.render('404');
+    if(req.headers['content-type'] === 'application/json') {
+        res.json({message: "Not found!"});
+    }
+    else {
+        res.render('404');
+    }
 });
 
 // 500
 app.use(function(err, _req, res, _next){
     console.error(err.stack);
     res.status(500);
-    res.render('500');
+    if(req.headers['content-type'] === 'application/json') {
+        res.json({message: "Yikes, an error!"});
+    }
+    else {
+        res.render('500');
+    }
 });
 
 app.listen(app.get('port'), function(){

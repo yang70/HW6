@@ -1,0 +1,28 @@
+/* Body */
+body {
+    font-family: Helvetica;
+    background-color: #D1D7E0;
+}
+
+/* General */
+table {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Exercise Table */
+#table-container > table {
+    background-color: white;
+    padding: 20px;
+    border-radius: 5px;
+}
+
+/* Header */
+h1 {
+    text-align: center;
+}
+
+/* Error Container */
+#error-container {
+    color: red;
+}

@@ -1,5 +1,4 @@
 COLUMNS = ["name", "reps", "weight", "lbs", "date"];
-API_URL = 'http://flip2.engr.oregonstate.edu:4861'
 
 ///////////////////////
 // INITIAL PAGE LOAD //
@@ -21,7 +20,7 @@ function createTable() {
             addNewWorkoutRow(workout);
         });
     }).catch(err => {
-        console.error(err)
+        handleError(err);
     });
 }
 
@@ -30,6 +29,7 @@ function createTable() {
 /////////////////////
 
 function submitCreateWorkout(row) {
+    clearErrors();
     workout = workoutFromId(row.id);
 
     createWorkout(workout).then(res => {
@@ -37,25 +37,27 @@ function submitCreateWorkout(row) {
         addNewWorkoutRow(workout);
         initializeCreateRow();
     }).catch(err => {
-        console.error(err);
+        handleError(err);
     });
 }
 
 function submitEditWorkout(row) {
+    clearErrors();
     const workout = workoutFromId(row.id);
 
     editWorkout(workout).then(_res => {
         addWorkoutRow(row, workout);
     }).catch(err => {
-        console.error(err);
+        handleError(err);
     });
 }
 
 function submitDeleteWorkout(workoutId) {
+    clearErrors();
     deleteWorkout(workoutId).then(_res => {
         document.getElementById(workoutId).remove();
     }).catch(err => {
-        console.error(err);
+        handleError(err);
     });
 }
 
@@ -151,6 +153,7 @@ function addWorkoutRowButtons(row) {
     let editBtn = document.createElement("button");
     editBtn.innerText = "EDIT";
     editBtn.addEventListener("click", (_event) => {
+        clearErrors();
         editWorkoutRow(row.id);
     });
 
@@ -162,6 +165,7 @@ function addWorkoutRowButtons(row) {
     let delBtn = document.createElement("button");
     delBtn.innerText = "DELETE";
     delBtn.addEventListener("click", (_event) => {
+        clearErrors();
         submitDeleteWorkout(row.id);
     });
 
@@ -215,6 +219,7 @@ function editWorkoutRow(workoutId) {
     const cancelBtn = document.createElement("button");
     cancelBtn.innerText = "CANCEL";
     cancelBtn.addEventListener("click", (_event) => {
+        clearErrors();
         workout.id = row.id;
         addWorkoutRow(row, workout);
     });
@@ -222,9 +227,57 @@ function editWorkoutRow(workoutId) {
     row.appendChild(cancelCol);
 }
 
+///////////////////
+// Error Handler //
+///////////////////
+
+function handleError(err) {
+    console.error(err);
+
+    const errTable = document.getElementById("error-table");
+
+    const hdRow  = document.createElement("tr");
+    const header = document.createElement("th");
+
+    header.innerText = "Error";
+
+    hdRow.appendChild(header);
+    errTable.appendChild(hdRow);
+
+    if(err.errors) {
+        err.errors.forEach(error => {
+            let row   = document.createElement("tr");
+            let param = document.createElement("td");
+            let msg   = document.createElement("td");
+
+            param.innerText = error.param;
+            msg.innerText   = error.msg;
+
+            row.appendChild(param);
+            row.appendChild(msg);
+
+            errTable.appendChild(row);
+        });
+    }
+    else {
+        const row = document.createElement("tr");
+        const msg = document.createElement("td");
+
+        msg.innerText = err.message;
+
+        row.appendChild(msg);
+
+        errTable.appendChild(row);
+    }
+}
+
 //////////////////
 // MISC HELPERS //
 //////////////////
+
+function clearErrors() {
+    document.getElementById("error-table").innerText = "";
+}
 
 function elById(id) {
     return document.getElementById(id);
@@ -237,7 +290,8 @@ function clearRow(row) {
 function emptyWorkout() {
     let workout = {};
     COLUMNS.forEach(val => workout[val] = null);
-    workout.id = "new";
+    workout.id  = "new";
+    workout.lbs = true; // Default to lbs
     return workout;
 }
 
@@ -269,8 +323,9 @@ function fetchWorkouts() {
     const req = new XMLHttpRequest();
 
     return new Promise((resolve, reject) => {
-        let url = API_URL + '/workouts';
+        let url = '/workouts';
         req.open('GET', url, true);
+        req.setRequestHeader('Content-Type', 'application/json');
         req.addEventListener('load', () => {
             if(req.status >= 200 && req.status < 400) {
                 resolve(JSON.parse(req.response));
@@ -288,7 +343,7 @@ function createWorkout(workout) {
     const req = new XMLHttpRequest();
 
     return new Promise((resolve, reject) => {
-        let url = API_URL + `/workouts/new`;
+        let url = `/workouts/new`;
         req.open('POST', url, true);
         req.setRequestHeader('Content-Type', 'application/json');
         req.addEventListener('load', () => {
@@ -308,7 +363,7 @@ function editWorkout(workout) {
     const req = new XMLHttpRequest();
 
     return new Promise((resolve, reject) => {
-        let url = API_URL + `/workouts/${workout.id}`;
+        let url = `/workouts/${workout.id}`;
         req.open('PUT', url, true);
         req.setRequestHeader('Content-Type', 'application/json');
         req.addEventListener('load', () => {
@@ -328,8 +383,9 @@ function deleteWorkout(workoutId) {
     const req = new XMLHttpRequest();
 
     return new Promise((resolve, reject) => {
-        let url = API_URL + `/workouts/${workoutId}`;
+        let url = `/workouts/${workoutId}`;
         req.open('DELETE', url, true);
+        req.setRequestHeader('Content-Type', 'application/json');
         req.addEventListener('load', () => {
             if(req.status >= 200 && req.status < 400) {
                 resolve(JSON.parse(req.response));
