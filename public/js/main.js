@@ -208,7 +208,7 @@ function editWorkoutRow(workoutId) {
 
     const submitCol = document.createElement("td");
     const submitBtn = document.createElement("button");
-    submitBtn.innerText = "SUBMIT";
+    submitBtn.innerText = "SAVE";
     submitBtn.addEventListener("click", (_event) => {
         submitEditWorkout(row);
     });
